@@ -1,0 +1,40 @@
+﻿using AT.Application.Exceptions;
+using AT.Application.Interfaces;
+using AT.Domain.Entities;
+using AT.Domain.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.NetworkInformation;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace AT.Application.Services
+{
+    public class ApplicationStatusService : IApplicationStatusService
+    {        
+        private readonly IApplicationStatusRepository _applicationStatusRepository;        
+
+        public ApplicationStatusService(IApplicationStatusRepository applicationStatusRepository)
+        {
+            _applicationStatusRepository = applicationStatusRepository;
+        }        
+
+        public async Task<IEnumerable<string>> GetApplicationStatusNamesAsync()
+        {
+            var statuses = await _applicationStatusRepository.GetAllAsync();
+            return statuses.Select(s => s.ApplicationStatusName).ToList();
+        }
+
+        public async Task<string> GetApplicationStatusNameByIdAsync(int id)
+        {
+            var status = await _applicationStatusRepository.GetAsync(id);
+
+            if (status is null)
+                throw new NotFoundException($"Application status with id :{id} does not exist.");
+
+            return status.ApplicationStatusName;
+        }
+    }
+}
