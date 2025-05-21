@@ -27,14 +27,14 @@ namespace AT.Application.Services
             return statuses.Select(s => s.ApplicationStatusName).ToList();
         }
 
-        public async Task<string> GetApplicationStatusNameByIdAsync(int id)
+        public async Task<ApplicationStatus> GetApplicationStatusByNameAsync(string name)
         {
-            var status = await _applicationStatusRepository.GetAsync(id);
+            var status = (await _applicationStatusRepository.GetAsync(x => x.ApplicationStatusName == name)).FirstOrDefault();
 
             if (status is null)
-                throw new NotFoundException($"Application status with id :{id} does not exist.");
+                throw new NotFoundException($"Application status with name :{name} does not exist.");
 
-            return status.ApplicationStatusName;
+            return status;
         }
     }
 }

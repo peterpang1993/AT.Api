@@ -12,16 +12,21 @@ namespace AT.Api.Controllers
     public class ApplicationsController(IApplicationService applicationService, 
         IApplicationStatusService applicationStatusService) 
         : ControllerBase
-    {
-        //getall
+    {        
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<GetApplicationDTO>>> GetAll()
+        public async Task<ActionResult<PaginatedResult<GetApplicationDTO>>> GetAll([FromQuery]PagingParameter pagingParameter)
         {
-            var result = await applicationService.GetAllApplicationAsync();
+            var validator = new PagingParameterValidator();
+
+            var validationResult = await validator.ValidateAsync(pagingParameter);
+
+            if (!validationResult.IsValid)
+                throw new ValidationException(validationResult.Errors);
+
+            var result = await applicationService.GetAllApplicationAsync(pagingParameter.Page, pagingParameter.PageSize);
             return Ok(result);
         }
-
-        //get by id
+        
         [HttpGet]
         [Route("{id}")]
         public async Task<ActionResult<GetApplicationDTO>> GetById([FromRoute] int id)
@@ -29,8 +34,7 @@ namespace AT.Api.Controllers
             var result = await applicationService.GetApplicationByIdAsync(id);
             return Ok(result);
         }
-
-        //create application
+        
         [HttpPost]
         public async Task<ActionResult<GetApplicationDTO>> CreateApplication([FromBody] CreateApplicationDTO dto)
         {
@@ -44,8 +48,7 @@ namespace AT.Api.Controllers
             var result = await applicationService.CreateApplicationAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
         }
-
-        //update application
+        
         [HttpPatch]
         [Route("{id}/ApplicationStatus")]
         public async Task<ActionResult<GetApplicationDTO>> UpdateApplicationStatus([FromRoute] int id, [FromBody] UpdateApplicationStatusDTO dto)

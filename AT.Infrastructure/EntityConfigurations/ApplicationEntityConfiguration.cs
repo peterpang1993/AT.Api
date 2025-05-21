@@ -27,8 +27,8 @@ namespace AT.Infrastructure.EntityConfigurations
                 .IsRequired();
 
             builder.HasOne(x => x.ApplicationStatus)
-                .WithOne()
-                .HasForeignKey<ApplicationStatus>(x => x.Id)
+                .WithMany()
+                .HasForeignKey(x => x.ApplicationStatusId)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

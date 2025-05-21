@@ -1,8 +1,11 @@
 ﻿using AT.Application.Convertors;
 using AT.Application.DTOs;
 using AT.Application.Exceptions;
+using AT.Application.Extensions;
 using AT.Application.Interfaces;
+using AT.Domain.Entities;
 using AT.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,13 +17,13 @@ namespace AT.Application.Services
     public class ApplicationService : IApplicationService
     {
         private readonly IApplicationRepository _applicationRepository;
-        private readonly IApplicationStatusRepository _applicationStatusRepository;
+        private readonly IApplicationStatusService _applicationStatusService;
 
         public ApplicationService(IApplicationRepository applicationRepository,
-            IApplicationStatusRepository applicationStatusRepository)
+            IApplicationStatusService applicationStatusService)
         {
             _applicationRepository = applicationRepository;
-            _applicationStatusRepository = applicationStatusRepository;
+            _applicationStatusService = applicationStatusService;
         }
 
         public async Task<GetApplicationDTO> GetApplicationByIdAsync(int id)
@@ -32,16 +35,19 @@ namespace AT.Application.Services
 
             return applicationItem.ConvertToGetApplicationDTO();
         }
-        public async Task<IEnumerable<GetApplicationDTO>> GetAllApplicationAsync()
-        {
-            var applicationItemList = await _applicationRepository.GetAllApplicationWithApplicationStatusAsync();
 
-            return applicationItemList.Select(x => x.ConvertToGetApplicationDTO());
+        public async Task<PaginatedResult<GetApplicationDTO>> GetAllApplicationAsync(int page, int pageSize)
+        {
+            IQueryable<Domain.Entities.Application> allApplicationQuery = _applicationRepository.GetAllApplicationWithApplicationStatus();
+
+            PaginatedResult<GetApplicationDTO> result = await allApplicationQuery.GetPagedAsync(page, pageSize, x => x.ConvertToGetApplicationDTO());           
+
+            return result;
         }
-                
+
         public async Task<GetApplicationDTO> CreateApplicationAsync(CreateApplicationDTO dto)
         {
-            var status = (await _applicationStatusRepository.GetAsync(x => x.ApplicationStatusName == dto.ApplicationStatus)).FirstOrDefault();
+            ApplicationStatus status = (await _applicationStatusService.GetApplicationStatusByNameAsync(dto.ApplicationStatus));
 
             if (status is null)
                 throw new NotFoundException($"Application Status with name {dto.ApplicationStatus} does not exist.");
@@ -49,7 +55,7 @@ namespace AT.Application.Services
             Domain.Entities.Application application = AT.Domain.Entities.Application
                 .Create(dto.Company, dto.Position, dto.DateApplied, status);
 
-            await _applicationRepository.AddAsync(application);
+            await _applicationRepository.AddAsync(application);            
 
             return application.ConvertToGetApplicationDTO();
         }
@@ -61,7 +67,7 @@ namespace AT.Application.Services
             if(application is null)
                 throw new NotFoundException($"Application with Id {id} does not exist");
 
-            var status = (await _applicationStatusRepository.GetAsync(x => x.ApplicationStatusName == dto.ApplicationStatus)).FirstOrDefault();
+            var status = await _applicationStatusService.GetApplicationStatusByNameAsync(dto.ApplicationStatus);
 
             if (status is null)
                 throw new NotFoundException($"Application Status with name {dto.ApplicationStatus} does not exist.");

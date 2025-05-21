@@ -11,21 +11,24 @@ using System.Threading.Tasks;
 namespace AT.Infrastructure.Repositories
 {
     public class ApplicationRepository : BaseRepository<Application>, IApplicationRepository
-    {
-        public new readonly ATDbContext _dbContext;
+    {        
         public ApplicationRepository(ATDbContext dbContext) : base(dbContext)
+        {            
+        }
+
+        public IQueryable<Application> GetAllApplicationWithApplicationStatus()
         {
-            _dbContext = dbContext;
+            return _dbContext.Applications.Include(x => x.ApplicationStatus);
         }
 
         public async Task<Application?> GetApplicationWithApplicationStatusByIdAsync(int id)
         {
-            return await _dbContext.Applications.Include(x => x.ApplicationStatus).FirstOrDefaultAsync(x => x.Id == id);
+            return await GetAllApplicationWithApplicationStatus().FirstOrDefaultAsync(x => x.Id == id);
         }
 
         public async Task<IEnumerable<Application>> GetAllApplicationWithApplicationStatusAsync()
         {
-            return await _dbContext.Applications.Include(x => x.ApplicationStatus).ToListAsync();
+            return await GetAllApplicationWithApplicationStatus().ToListAsync();
         }
     }
 }

@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 namespace AT.Infrastructure.Repositories
 {
     public class ApplicationStatusRepository : BaseRepository<ApplicationStatus>, IApplicationStatusRepository
-    {
-        private new readonly ATDbContext _dbContext;
+    {        
         public ApplicationStatusRepository(ATDbContext dbContext) : base(dbContext)
-        {
-            _dbContext = dbContext;
+        {           
         }
     }
 }

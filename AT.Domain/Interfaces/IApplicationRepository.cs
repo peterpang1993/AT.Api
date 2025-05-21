@@ -9,6 +9,7 @@ namespace AT.Domain.Interfaces
 {
     public interface IApplicationRepository : IBaseRepository<Application>
     {
+        public IQueryable<Application> GetAllApplicationWithApplicationStatus();
         public Task<Application?> GetApplicationWithApplicationStatusByIdAsync(int id);
         public Task<IEnumerable<Application>> GetAllApplicationWithApplicationStatusAsync();
     }
